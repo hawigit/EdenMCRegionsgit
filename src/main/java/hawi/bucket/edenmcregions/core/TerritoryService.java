@@ -110,7 +110,7 @@ public final class TerritoryService implements AutoCloseable {
         return dimension -> {
             HttpRequest request = HttpRequest.newBuilder(URI.create(API + dimension))
                     .timeout(Duration.ofSeconds(20)).header("Accept", "application/json")
-                    .header("User-Agent", "EdenMCRegions/1.4.0 (Minecraft client map HUD)").GET().build();
+                    .header("User-Agent", "EdenMCRegions/1.4.1 (Minecraft client map HUD)").GET().build();
             // Bound the full body, including a stalled stream after response headers arrive.
             CompletableFuture<HttpResponse<byte[]>> pending = client.sendAsync(request, info -> new LimitedBodySubscriber(MAX_BYTES));
             HttpResponse<byte[]> response;
