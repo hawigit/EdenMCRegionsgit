@@ -64,7 +64,7 @@ Set `JAVA_HOME` to your JDK 25 installation if Gradle selects a different Java v
 Collected files appear in:
 
 ```text
-build/libs/1.4.0/
+build/libs/1.4.1/
 ```
 
 The folder name follows `mod.version` in `stonecutter.properties.toml`.
@@ -72,7 +72,7 @@ The folder name follows `mod.version` in `stonecutter.properties.toml`.
 For Minecraft 26.1.2, install:
 
 ```text
-EdenMCRegions-1.4.0+mc26.1.2.jar
+EdenMCRegions-1.4.1+mc26.1.2.jar
 ```
 
 Do **not** install the file ending in `-sources.jar`. Use only the JAR matching your Minecraft version, and remove the older EdenMCRegions JAR before replacing it.
