@@ -1,0 +1,18 @@
+{
+  "schemaVersion": 1,
+  "id": "edenmcregions",
+  "version": "${version}",
+  "name": "EdenMCRegions",
+  "description": "Shows your nation and region using the community EdenMC claims map.",
+  "environment": "client",
+  "entrypoints": { "client": ["hawi.bucket.edenmcregions.EdenMCRegionsClient"] },
+  "license": "MIT",
+  "depends": {
+    "fabricloader": ">=0.19.3",
+    "minecraft": "${minecraft}",
+    "java": ">=${java}",
+    "fabric-api": ">=${api}"
+  }
+}
+
+
