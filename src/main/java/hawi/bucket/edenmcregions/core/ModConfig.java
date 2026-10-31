@@ -22,6 +22,7 @@ public final class ModConfig {
     public int titleSeconds = 4;
     public boolean showCoordinates = false;
     public boolean showInSingleplayer = false;
+    public boolean useOverworldBordersInNether = false;
     public int refreshSeconds = 86400;
     public String nationScoreboardColor = "#E5E7EB";
     public String regionScoreboardColor = "#9CE3C3";

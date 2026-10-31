@@ -82,6 +82,10 @@ public final class EdenMCRegionsClient implements ClientModInitializer {
         return "unsupported";
     }
     private String server(Minecraft client) { return client.getCurrentServer() == null ? "" : client.getCurrentServer().ip; }
+    private String mapDimension(Minecraft client) {
+        String dim = dimension(client);
+        return dim.equals("nether") && config.useOverworldBordersInNether ? "overworld" : dim;
+    }
     private void tick(Minecraft client) {
         // Opening on the following tick avoids the chat screen closing over the settings screen.
         if (settingsRequested) { settingsRequested = false; HudPlatform.setScreen(new SettingsScreen(this)); }
@@ -92,7 +96,7 @@ public final class EdenMCRegionsClient implements ClientModInitializer {
                 || !config.accepts(server(client), client.hasSingleplayerServer())) {
             lines = List.of(); context = ""; tracker.reset(); announcement.clear(); return;
         }
-        String dim = dimension(client), nextContext = server(client) + "/" + dim;
+        String dim = mapDimension(client), nextContext = server(client) + "/" + dimension(client) + "/" + dim;
         if (!nextContext.equals(context)) { context = nextContext; tracker.reset(); announcement.clear(); }
         List<Line> next = new ArrayList<>();
         if (dim.equals("unsupported")) {
@@ -251,7 +255,7 @@ public final class EdenMCRegionsClient implements ClientModInitializer {
                 .then(literal("status").executes(c -> status()))
                 .then(literal("reload").executes(c -> {
                     boolean loaded = loadConfig();
-                    service.refresh(dimension(Minecraft.getInstance()), config.refreshSeconds);
+                    service.refresh(mapDimension(Minecraft.getInstance()), config.refreshSeconds);
                     feedback(loaded ? "Settings reloaded. The configured update interval still applies (minimum 6 hours)." : "Config invalid; kept current settings.");
                     return loaded ? 1 : 0;
                 }))
@@ -260,7 +264,7 @@ public final class EdenMCRegionsClient implements ClientModInitializer {
     private static LiteralArgumentBuilder<FabricClientCommandSource> literal(String name) { return LiteralArgumentBuilder.literal(name); }
     private int status() {
         Minecraft client = Minecraft.getInstance();
-        TerritoryService.State state = service.state(dimension(client));
+        TerritoryService.State state = service.state(mapDimension(client));
         String location = "Unavailable";
         if (state.index() != null && client.player != null) {
             List<TerritoryIndex.Match> matches = state.index().locate(client.player.getX(), client.player.getZ());
