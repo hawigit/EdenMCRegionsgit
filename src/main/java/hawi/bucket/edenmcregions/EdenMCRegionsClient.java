@@ -20,6 +20,8 @@ import java.util.*;
 public final class EdenMCRegionsClient implements ClientModInitializer {
     private static final Logger LOG = LoggerFactory.getLogger("EdenMCRegions");
     private final Path configPath = FabricLoader.getInstance().getConfigDir().resolve("eden-territories.json");
+    private final ErrorLog errors = new ErrorLog(FabricLoader.getInstance().getGameDir()
+            .resolve("logs/edenmcregions-errors.txt"));
     private final LocationTracker tracker = new LocationTracker();
     private final Announcement announcement = new Announcement();
     private TitleText titleText = new TitleText(List.of());
@@ -40,7 +42,7 @@ public final class EdenMCRegionsClient implements ClientModInitializer {
     @Override public void onInitializeClient() {
         config = new ModConfig();
         loadConfig();
-        service = new TerritoryService(FabricLoader.getInstance().getConfigDir().resolve("eden-territories-cache"));
+        service = new TerritoryService(FabricLoader.getInstance().getConfigDir().resolve("eden-territories-cache"), errors::report);
         ClientTickEvents.END_CLIENT_TICK.register(this::tick);
         ClientLifecycleEvents.CLIENT_STOPPING.register(client -> service.close());
         HudPlatform.register(this::render, this::restore);
@@ -58,12 +60,12 @@ public final class EdenMCRegionsClient implements ClientModInitializer {
     public ModConfig config() { return config; }
     private boolean loadConfig() {
         try { config = ModConfig.load(configPath); return true; }
-        catch (Exception e) { LOG.warn("Cannot load {}. Keeping current/default settings.", configPath, e); return false; }
+        catch (Exception e) { errors.report("Cannot load " + configPath + ". Keeping current/default settings.", e); return false; }
     }
     public boolean savePreferences() {
         syncDisplayModes();
         try { config.save(configPath); return true; }
-        catch (Exception e) { LOG.warn("Cannot save configuration", e); return false; }
+        catch (Exception e) { errors.report("Cannot save configuration to " + configPath, e); return false; }
     }
 
     private void syncDisplayModes() {

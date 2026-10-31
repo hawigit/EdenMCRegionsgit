@@ -79,6 +79,14 @@ Do **not** install the file ending in `-sources.jar`. Use only the JAR matching 
 
 To play, install Fabric Loader 0.19.3 or newer and the Fabric API version required by that target. Minecraft 1.21.x builds use Java 21 at runtime; 26.x builds use Java 25. All targets are built using JDK 25.
 
+## Error logs
+
+Mod errors are appended to `logs/edenmcregions-errors.txt` inside the Minecraft instance folder.
+Entries include a UTC timestamp, the operation that failed, and the full exception with its causes.
+This covers map downloads, map parsing, cache and request timestamp files, and settings loading or saving.
+Errors also appear in Minecraft's normal log. Once the dedicated log reaches 1 MiB, it is rotated to
+`logs/edenmcregions-errors.previous.txt`, keeping one previous file.
+
 ## License
 
 [MIT](LICENSE). Map data belongs to its respective contributors.

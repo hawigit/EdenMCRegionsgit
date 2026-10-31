@@ -9,6 +9,7 @@ import java.nio.file.attribute.FileTime;
 import java.time.*;
 import java.util.*;
 import java.util.concurrent.*;
+import java.util.function.BiConsumer;
 
 /** Network and cache work stays on a daemon worker, independent of the game/render thread. */
 public final class TerritoryService implements AutoCloseable {
@@ -26,6 +27,7 @@ public final class TerritoryService implements AutoCloseable {
     private final Path cacheDir;
     private final Transport transport;
     private final Clock clock;
+    private final BiConsumer<String, Throwable> errors;
     private final ExecutorService worker = Executors.newSingleThreadExecutor(r -> {
         Thread t = new Thread(r, "EdenMCRegions-map"); t.setDaemon(true); return t;
     });
@@ -34,21 +36,33 @@ public final class TerritoryService implements AutoCloseable {
 
     public TerritoryService(Path cacheDir) { this(cacheDir, httpTransport(), Clock.systemUTC()); }
     public TerritoryService(Path cacheDir, Transport transport, Clock clock) {
+        this(cacheDir, transport, clock, (operation, error) -> {});
+    }
+    public TerritoryService(Path cacheDir, BiConsumer<String, Throwable> errors) {
+        this(cacheDir, httpTransport(), Clock.systemUTC(), errors);
+    }
+    public TerritoryService(Path cacheDir, Transport transport, Clock clock, BiConsumer<String, Throwable> errors) {
         this.cacheDir = cacheDir; this.transport = transport; this.clock = clock;
+        this.errors = errors;
         for (String dimension : List.of("overworld", "nether")) {
             State state = new State(null, Instant.EPOCH, false, "");
             Path path = cacheDir.resolve(dimension + ".json");
             try {
-                if (Files.isRegularFile(path) && Files.size(path) <= MAX_BYTES) {
+                if (Files.isRegularFile(path)) {
+                    if (Files.size(path) > MAX_BYTES) throw new IOException("Map cache exceeds " + MAX_BYTES + " bytes");
                     state = new State(TerritoryIndex.parse(Files.readString(path), dimension),
                             Files.getLastModifiedTime(path).toInstant(), false, "");
                 }
-            } catch (Exception ignored) { state = new State(null, Instant.EPOCH, false, "Cache could not be read"); }
+            } catch (Exception e) {
+                errors.accept("Could not read map cache: " + path, e);
+                state = new State(null, Instant.EPOCH, false, "Cache could not be read");
+            }
             states.put(dimension, state);
             try {
                 Path lastRequest = cacheDir.resolve(dimension + ".last-request");
                 if (Files.isRegularFile(lastRequest)) attempts.put(dimension, Instant.parse(Files.readString(lastRequest).strip()));
-            } catch (Exception ignored) {
+            } catch (Exception e) {
+                errors.accept("Could not read request timestamp for " + dimension, e);
                 // A damaged schedule is treated conservatively without discarding usable borders.
                 attempts.put(dimension, clock.instant());
             }
@@ -70,17 +84,25 @@ public final class TerritoryService implements AutoCloseable {
         attempts.put(dimension, now);
         states.put(dimension, new State(old.index, old.updated, true, old.error));
         return CompletableFuture.runAsync(() -> {
+            String operation = "Saving request timestamp";
             try {
                 // Persist BEFORE contacting the server, including when that request later fails.
                 writeAtomic(cacheDir.resolve(dimension + ".last-request"), now.toString());
+                operation = "Downloading map from " + API + dimension;
                 String response = transport.fetch(dimension);
                 if (response.length() > MAX_BYTES) throw new IOException("Map response is too large");
+                operation = "Parsing map response";
                 TerritoryIndex index = TerritoryIndex.parse(response, dimension);
                 String cacheError = "";
                 try { save(dimension, index.cacheJson()); }
-                catch (IOException e) { cacheError = "Map loaded; disk cache could not be saved"; }
+                catch (IOException e) {
+                    errors.accept("Could not save map cache for " + dimension, e);
+                    cacheError = "Map loaded; disk cache could not be saved";
+                }
                 states.put(dimension, new State(index, clock.instant(), false, cacheError));
             } catch (Exception e) {
+                errors.accept(operation + " failed for " + dimension + "; keeping existing borders. Next request no earlier than "
+                        + now.plusSeconds(interval), e);
                 if (e instanceof InterruptedException) Thread.currentThread().interrupt();
                 states.put(dimension, new State(old.index, old.updated, false,
                         "Map refresh failed (" + e.getClass().getSimpleName() + ")"));
