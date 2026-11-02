@@ -3,10 +3,12 @@ plugins {
 }
 
 val mcVersion = sc.current.version
+val experimental = sc.current.project.endsWith("-experimental")
+val distribution = if (experimental) "experimental" else "public"
 val requiredJava = if (sc.current.parsed >= "26.1") 25 else 21
 val fabricApiVersion = sc.properties.get<String>("deps.fabric_api")
 
-version = "${property("mod.version")}+mc$mcVersion"
+version = "${property("mod.version")}${if (experimental) "-experimental" else ""}+mc$mcVersion"
 base.archivesName = property("mod.name") as String
 
 repositories {
@@ -23,7 +25,7 @@ dependencies {
 loom {
     fabricModJsonPath = rootProject.file("src/main/resources/fabric.mod.json")
     runConfigs.configureEach {
-        runDirectory = rootProject.file("run/$mcVersion")
+        runDirectory = rootProject.file("run/$distribution/$mcVersion")
     }
 }
 
@@ -41,6 +43,7 @@ tasks.withType<JavaCompile>().configureEach {
 tasks.processResources {
     val properties = mapOf(
         "version" to project.version,
+        "name" to "EdenMCRegions${if (experimental) " (Experimental)" else ""}",
         "minecraft" to mcVersion,
         "java" to requiredJava,
         "api" to fabricApiVersion
@@ -56,8 +59,8 @@ tasks.jar {
 
 tasks.register<Copy>("buildAndCollect") {
     group = "build"
-    description = "Builds this version and collects release and sources JARs."
+    description = "Builds this target and collects its installable JAR in dist/$distribution."
     dependsOn(tasks.build)
-    from(loomx.modJar.flatMap { it.archiveFile }, loomx.modSourcesJar.flatMap { it.archiveFile })
-    into(rootProject.layout.buildDirectory.dir("libs/${project.property("mod.version")}"))
+    from(loomx.modJar.flatMap { it.archiveFile })
+    into(rootProject.layout.projectDirectory.dir("dist/$distribution/${project.property("mod.version")}"))
 }

@@ -21,7 +21,9 @@ public final class SettingsScreen extends Screen {
     private String saveError = "";
     private boolean colorsPage;
     private boolean textPage;
-    private boolean experimentPage;
+    //? if experimental {
+    /*private boolean experimentPage;
+    *///?}
     private ColorSetting selectedColor;
     private ColorWheel wheel;
     private EditBox pickerHex;
@@ -38,13 +40,19 @@ public final class SettingsScreen extends Screen {
     @Override protected void init() {
         panelWidth = Math.min(340, width - 24);
         left = (width - panelWidth) / 2;
-        top = Math.max(4, (height - (colorsPage ? 232 : 244)) / 2);
+        //? if experimental {
+        /*top = Math.max(4, (height - (colorsPage ? 232 : 244)) / 2);
+        *///?} else {
+        top = Math.max(4, (height - (colorsPage ? 232 : 218)) / 2);
+        //?}
         colors.clear();
         draggingWheel = false;
         if (selectedColor != null) { initPicker(); return; }
         if (colorsPage) { initColors(); return; }
         if (textPage) { initTextSettings(); return; }
-        if (experimentPage) { initExperiments(); return; }
+        //? if experimental {
+        /*if (experimentPage) { initExperiments(); return; }
+        *///?}
         addRenderableWidget(Button.builder(toggle("Mod enabled", mod.config().enabled), b -> {
             mod.config().enabled = !mod.config().enabled;
             b.setMessage(toggle("Mod enabled", mod.config().enabled)); save();
@@ -80,14 +88,20 @@ public final class SettingsScreen extends Screen {
         addRenderableWidget(Button.builder(Component.literal("Text & states..."), b -> {
             textPage = true; clearWidgets(); init();
         }).bounds(left + 16, top + 185, half, 20).build());
-        addRenderableWidget(Button.builder(Component.literal("Experiment..."), b -> {
+        //? if experimental {
+        /*addRenderableWidget(Button.builder(Component.literal("Experiment..."), b -> {
             experimentPage = true; clearWidgets(); init();
         })
                 .bounds(left + 20 + half, top + 185, half, 20).build());
         addRenderableWidget(Button.builder(Component.literal("Done"), b -> onClose())
                 .bounds(left + 16, top + 211, panelWidth - 32, 20).build());
+        *///?} else {
+        addRenderableWidget(Button.builder(Component.literal("Done"), b -> onClose())
+                .bounds(left + 20 + half, top + 185, half, 20).build());
+        //?}
     }
-    private void initExperiments() {
+    //? if experimental {
+    /*private void initExperiments() {
         addRenderableWidget(Button.builder(toggle("Overworld borders in Nether", mod.config().useOverworldBordersInNether), b -> {
             mod.config().useOverworldBordersInNether = !mod.config().useOverworldBordersInNether;
             b.setMessage(toggle("Overworld borders in Nether", mod.config().useOverworldBordersInNether)); save();
@@ -96,6 +110,7 @@ public final class SettingsScreen extends Screen {
             experimentPage = false; clearWidgets(); init();
         }).bounds(left + 16, top + 185, panelWidth - 32, 20).build());
     }
+    *///?}
     private void initTextSettings() {
         addRenderableWidget(Button.builder(textModeLabel("Nation", mod.config().nationTextMode), b -> {
             mod.config().nationTextMode = mod.config().nationTextMode.next();
@@ -271,10 +286,12 @@ public final class SettingsScreen extends Screen {
         // Screen already draws Minecraft's vanilla menu background before this content.
         canvas.centeredScaledText("EdenMCRegions", width / 2, top + 15, 0xffffffff, 1f);
         if (textPage) canvas.centeredScaledText("Display options", width / 2, top + 32, 0xffffffff, 1f);
-        if (experimentPage) {
+        //? if experimental {
+        /*if (experimentPage) {
             canvas.centeredScaledText("Experiment", width / 2, top + 32, 0xffffffff, 1f);
             canvas.centeredScaledText("Uses the same X/Z in both dimensions.", width / 2, top + 88, 0xffaeb8c3, 1f);
         }
+        *///?}
         if (selectedColor != null) {
             drawPicker(canvas);
         } else if (colorsPage) {
@@ -285,7 +302,11 @@ public final class SettingsScreen extends Screen {
         }
         String info = saveError;
         info = Minecraft.getInstance().font.plainSubstrByWidth(info, panelWidth - 20);
-        canvas.centeredScaledText(info, width / 2, top + (selectedColor != null ? 43 : colorsPage ? 194 : 234), saveError.isEmpty() ? 0xffaeb8c3 : 0xffff9988, 1f);
+        //? if experimental {
+        /*canvas.centeredScaledText(info, width / 2, top + (selectedColor != null ? 43 : colorsPage ? 194 : 234), saveError.isEmpty() ? 0xffaeb8c3 : 0xffff9988, 1f);
+        *///?} else {
+        canvas.centeredScaledText(info, width / 2, top + (selectedColor != null ? 43 : colorsPage ? 194 : 208), saveError.isEmpty() ? 0xffaeb8c3 : 0xffff9988, 1f);
+        //?}
     }
     @Override public boolean isPauseScreen() { return false; }
     @Override public void onClose() { save(); HudPlatform.setScreen(null); }

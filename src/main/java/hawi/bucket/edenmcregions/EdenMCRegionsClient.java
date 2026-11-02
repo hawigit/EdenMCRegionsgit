@@ -84,7 +84,10 @@ public final class EdenMCRegionsClient implements ClientModInitializer {
     private String server(Minecraft client) { return client.getCurrentServer() == null ? "" : client.getCurrentServer().ip; }
     private String mapDimension(Minecraft client) {
         String dim = dimension(client);
-        return dim.equals("nether") && config.useOverworldBordersInNether ? "overworld" : dim;
+        //? if experimental {
+        /*if (dim.equals("nether") && config.useOverworldBordersInNether) return "overworld";
+        *///?}
+        return dim;
     }
     private void tick(Minecraft client) {
         // Opening on the following tick avoids the chat screen closing over the settings screen.

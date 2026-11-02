@@ -28,19 +28,25 @@ If Gradle is using the wrong Java installation, set `JAVA_HOME` to your JDK 25 i
 $env:JAVA_HOME = 'C:\path\to\jdk-25'
 ```
 
-Build all supported versions:
+Build public and experimental JARs for all supported versions:
 
 ```powershell
 .\gradlew.bat buildAndCollect
 ```
 
-Build only Minecraft 26.1.2:
+Build only the public Minecraft 26.1.2 JAR:
 
 ```powershell
 .\gradlew.bat :26.1.2:buildAndCollect
 ```
 
 Replace `26.1.2` with another supported target to build that version.
+
+Build its experimental variant:
+
+```powershell
+.\gradlew.bat :26.1.2-experimental:buildAndCollect
+```
 
 ### Linux and macOS
 
@@ -57,6 +63,8 @@ To build only one target:
 ./gradlew :26.1.2:buildAndCollect
 ```
 
+Use `:26.1.2-experimental:buildAndCollect` for the experimental variant.
+
 Set `JAVA_HOME` to your JDK 25 installation if Gradle selects a different Java version.
 
 ## Build output
@@ -64,10 +72,12 @@ Set `JAVA_HOME` to your JDK 25 installation if Gradle selects a different Java v
 Collected files appear in:
 
 ```text
-build/libs/1.4.1/
+dist/public/1.4.1/
+dist/experimental/1.4.1/
 ```
 
-The folder name follows `mod.version` in `stonecutter.properties.toml`.
+The version folder follows `mod.version` in `stonecutter.properties.toml`. These folders contain installable JARs only.
+Gradle also builds source JARs in each target's `versions/<target>/build/libs/` folder.
 
 For Minecraft 26.1.2, install:
 
@@ -75,9 +85,27 @@ For Minecraft 26.1.2, install:
 EdenMCRegions-1.4.1+mc26.1.2.jar
 ```
 
+The experimental equivalent is `EdenMCRegions-1.4.1-experimental+mc26.1.2.jar`.
+Install **one variant**, not both: they use the same mod ID and settings file.
+
 Do **not** install the file ending in `-sources.jar`. Use only the JAR matching your Minecraft version, and remove the older EdenMCRegions JAR before replacing it.
 
 To play, install Fabric Loader 0.19.3 or newer and the Fabric API version required by that target. Minecraft 1.21.x builds use Java 21 at runtime; 26.x builds use Java 25. All targets are built using JDK 25.
+
+## Experimental features
+
+Both variants are built from this repository using Stonecutter's `experimental` condition.
+The public binary excludes experimental controls and their behavior; editing the config cannot enable them.
+The experimental build includes **Settings → Experiment → Overworld borders in Nether**, disabled by default.
+When enabled, Nether locations use Overworld borders at the same X/Z coordinates, without 8:1 scaling.
+The existing Overworld cache and refresh interval are shared. This assumes matching borders in both dimensions.
+
+## Build on GitHub
+
+After uploading this repository, open **Actions → Build distributions → Run workflow**.
+On completion, the run provides separate `EdenMCRegions-public` and `EdenMCRegions-experimental` artifacts.
+Each contains JARs for all supported Minecraft versions. To run it yourself without repository write access,
+fork the repository and enable Actions in your fork. The workflow builds files; it does not publish releases or upload to CurseForge.
 
 ## Error logs
 

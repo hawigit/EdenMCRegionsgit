@@ -15,6 +15,7 @@ import java.util.function.BiConsumer;
 public final class TerritoryService implements AutoCloseable {
     public static final String API = "https://core.edenmc.lol/api/nations?map=";
     public static final int MAX_BYTES = 8 * 1024 * 1024;
+    private static final int DOWNLOAD_TIMEOUT_SECONDS = 60;
     public static final int MIN_REFRESH_SECONDS = 6 * 3600;
     public static final int MAX_REFRESH_SECONDS = 24 * 3600;
     public static int clampRefreshSeconds(int seconds) { return Math.clamp(seconds, MIN_REFRESH_SECONDS, MAX_REFRESH_SECONDS); }
@@ -131,12 +132,12 @@ public final class TerritoryService implements AutoCloseable {
         HttpClient client = HttpClient.newBuilder().connectTimeout(Duration.ofSeconds(10)).build();
         return dimension -> {
             HttpRequest request = HttpRequest.newBuilder(URI.create(API + dimension))
-                    .timeout(Duration.ofSeconds(20)).header("Accept", "application/json")
+                    .timeout(Duration.ofSeconds(DOWNLOAD_TIMEOUT_SECONDS)).header("Accept", "application/json")
                     .header("User-Agent", "EdenMCRegions/1.4.1 (Minecraft client map HUD)").GET().build();
             // Bound the full body, including a stalled stream after response headers arrive.
             CompletableFuture<HttpResponse<byte[]>> pending = client.sendAsync(request, info -> new LimitedBodySubscriber(MAX_BYTES));
             HttpResponse<byte[]> response;
-            try { response = pending.get(20, TimeUnit.SECONDS); }
+            try { response = pending.get(DOWNLOAD_TIMEOUT_SECONDS, TimeUnit.SECONDS); }
             catch (Exception e) { pending.cancel(true); throw e; }
             if (response.statusCode() != 200) throw new IOException("HTTP " + response.statusCode());
             return new String(response.body(), StandardCharsets.UTF_8);

@@ -1,0 +1,33 @@
+name: Build distributions
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-java@v6
+        with:
+          distribution: temurin
+          java-version: '25'
+          cache: gradle
+      - name: Build public and experimental JARs
+        run: bash ./gradlew buildAndCollect --no-daemon
+      - name: Upload public distribution
+        uses: actions/upload-artifact@v7
+        with:
+          name: EdenMCRegions-public
+          path: dist/public/
+          if-no-files-found: error
+      - name: Upload experimental distribution
+        uses: actions/upload-artifact@v7
+        with:
+          name: EdenMCRegions-experimental
+          path: dist/experimental/
+          if-no-files-found: error

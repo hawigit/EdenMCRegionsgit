@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "id": "edenmcregions",
   "version": "${version}",
-  "name": "EdenMCRegions",
+  "name": "${name}",
   "description": "Shows your nation and region using the community EdenMC claims map.",
   "environment": "client",
   "entrypoints": { "client": ["hawi.bucket.edenmcregions.EdenMCRegionsClient"] },
